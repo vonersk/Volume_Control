@@ -22,8 +22,8 @@ void handleConnection(Socket client) {
     // handle data from the client
     (Uint8List data) async {
       await Future.delayed(Duration(seconds: 1));
-      final message = String.fromCharCodes(data);
-      client.write("$data");
+      final message = String.fromCharCodes(val);
+      client.write("$val");
     },
 
     // handle errors
