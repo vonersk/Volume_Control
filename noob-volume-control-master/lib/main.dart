@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:volume_control/volume_control.dart';
+import 'dart:typed_data';
+import 'dart:io';
 
 void main() => runApp(MyApp());
+
+
 
 class MyApp extends StatefulWidget {
   @override
@@ -18,10 +22,40 @@ class _MyAppState extends State<MyApp> {
 
   //init volume_control plugin
   Future<void> initVolumeState() async {
+
+    final socket = await Socket.connect('192.168.1.20', 4567);
+    print('Connected to: ${socket.remoteAddress.address}:${socket.remotePort}');
+
+    //listening to the server
+    socket.listen(
+
+    // handle data from the server
+    (Uint8List data) {
+      final serverResponse = String.fromCharCodes(data);
+      print('Server: $serverResponse');
+    },
+
+    // handle errors
+    onError: (error) {
+      print(error);
+      socket.destroy();
+    },
+
+    // handle server ending connection
+    onDone: () {
+      print('Server left.');
+      socket.destroy();
+    },
+  );
+    await sendMessage(socket, _val.toString());   
+
+
     if (!mounted) return;
 
+    
     //read the current volume
     _val = await VolumeControl.volume;
+    
     setState(() {});
   }
 
@@ -50,10 +84,21 @@ class _MyAppState extends State<MyApp> {
                     //use timer for the smoother sliding
                     timer = Timer(Duration(milliseconds: 200), () {
                       VolumeControl.setVolume(val);
+                      
                     });
 
-                    print("val:${val}");
-                  }))),
+                     print("val:$val");
+                                 
+                  }
+                  
+                  ))
+                  
+                 ),
     );
+    
   }
+    Future<void> sendMessage(Socket socket,String val) async {
+    print("Client: $val");
+    socket.write(val);
+    await Future.delayed(Duration(seconds: 2));
 }
